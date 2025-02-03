@@ -1,0 +1,11 @@
+[project]
+name = "sdt2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.115.8",
+    "kafka-python>=2.0.2",
+    "requests>=2.32.3",
+]
