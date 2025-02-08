@@ -37,6 +37,8 @@ impedir que o ar condicionado tenha sua temperatura aumentada pelo cliente quand
     - TURN_OFF
     - CHANGE_COLOR
         - Recebe como parametro tres valores, R, G e B, exemplo: [255, 123, 111]
+    - CHANGE_INTENSITY
+        - Recebe como parametro um valor de 0 a 100, que se refere a intensidade em % da luz, exemplo: [50]
 
 - Comandos que o radio aceita:
     - TURN_ON

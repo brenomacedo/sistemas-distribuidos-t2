@@ -1,4 +1,4 @@
-from random import randint, randbytes
+from random import randbytes
 from time import sleep, time
 from kafka import KafkaProducer
 from threading import Thread
@@ -19,23 +19,19 @@ class RemoteDeviceServicer(grpc_pb2_grpc.RemoteDeviceServicer):
         # Lógica para o método SendMessage
         print("Device", self.device.get_short_id(), "Recebou uma mensagem")
         if request.name == "TURN_ON":
-            print("Ligando o ar condicionado de id " + self.device.get_short_id())
+            print("Ligando o radio de id " + self.device.get_short_id())
             self.device.powered_on = True
         elif request.name == "TURN_OFF":
-            print("Desligando o ar condicionado de id " + self.device.get_short_id())
+            print("Desligando o radio de id " + self.device.get_short_id())
             self.device.powered_on = False
-        elif request.name == "INCREASE_TEMPERATURE":
+        elif request.name == "CHANGE_MUSIC":
             print(
-                "Aumentando a temperatura do ar condicionado de id "
+                "Mudando a musica do radio de id "
                 + self.device.get_short_id()
+                + " para "
+                + self.request.params[0]
             )
-            self.device.temperature += 1
-        elif request.name == "DECREASE_TEMPERATURE":
-            print(
-                "Diminuindo a temperatura do ar condicionado de id "
-                + self.device.get_short_id()
-            )
-            self.device.temperature -= 1
+            self.device.playing_music = self.request.params[0]
 
         response = grpc_pb2.MessageResponse(
             success=True,
@@ -45,10 +41,10 @@ class RemoteDeviceServicer(grpc_pb2_grpc.RemoteDeviceServicer):
         return response
 
 
-class AirConditioning:
+class Radio:
     def __init__(
         self,
-        name="Ar Condicionado",
+        name="Radio",
         broker_ip="localhost",
         broker_port=9092,
         grpc_listen_port=50000,
@@ -58,10 +54,10 @@ class AirConditioning:
         self.server = None
 
         self.name = name
-        self.type = "AIR_CONDITIONING"
+        self.type = "RADIO"
 
         self.powered_on = True
-        self.temperature = 25
+        self.playing_music = 0
 
         self.host = host
         self.grpc_listen_port = grpc_listen_port
@@ -92,9 +88,7 @@ class AirConditioning:
                             "message_type": "TEMPERATURE_REPORT",
                             "status": {
                                 "powered_on": self.powered_on,
-                                "temperature": randint(
-                                    self.temperature - 2, self.temperature + 2
-                                ),
+                                "playing_music": self.playing_music,
                             },
                             "device_ip": self.host,
                             "device_port": self.grpc_listen_port,
@@ -145,10 +139,7 @@ class AirConditioning:
         send_status_thread.join()
 
 
-name = (
-    input("Digite o nome do dispositivo: (Ex: Ar Condicionado da Sala): ")
-    or "Ar Condicionado"
-)
+name = input("Digite o nome do dispositivo: (Ex: Radio da Sala): ") or "Radio"
 
 grpc_listen_port = 50000
 try:
@@ -160,4 +151,4 @@ try:
 except Exception:
     pass
 
-AirConditioning(name=name, grpc_listen_port=grpc_listen_port).start()
+Radio(name=name, grpc_listen_port=grpc_listen_port).start()

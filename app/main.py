@@ -13,7 +13,7 @@ class DeviceMessage(BaseModel):
     device_id: str
     device_type: str
     message_type: str
-    temperature: int
+    status: dict
     device_ip: str
     device_port: int
 
