@@ -6,7 +6,7 @@ import json
 
 
 class AirConditioning:
-    def __init__(self):
+    def __init__(self, name = "Ar Condicionado", broker_ip = "localhost", broker_port = 9092, grpc_listen_port = 9000, host = "localhost", port = 9000):
         self.run = True
 
         self.name = "Ar Condicionado 1"
@@ -15,10 +15,12 @@ class AirConditioning:
         self.powered_on = True
         self.temperature = 25
 
-        self.broker_ip = "localhost"
-        self.broker_port = 9092
+        self.host = host
+        self.grpc_listen_port = grpc_listen_port
+
+        self.broker_ip = broker_ip
+        self.broker_port = broker_port
  
-        self.grpc_listen_port = 9000
         self.hash_id = f"{int(time() * 1000)}-{randbytes(20).hex()}"
 
         self.producer = KafkaProducer(
@@ -27,20 +29,25 @@ class AirConditioning:
         )
 
     def send_status(self):
-        while self.run:
-            if self.powered_on:
-                self.producer.send(
-                    "device_messages",
-                    {
-                        "device_id": self.hash_id,
-                        "device_type": self.type,
-                        "message_type": "TEMPERATURE_REPORT",
-                        "temperature": randint(
-                            self.temperature - 2, self.temperature + 2
-                        ),
-                    },
-                )
-            sleep(1)
+        try:
+            while self.run:
+                if self.powered_on:
+                    self.producer.send(
+                        "device_message",
+                        {
+                            "device_id": self.hash_id,
+                            "device_type": self.type,
+                            "message_type": "TEMPERATURE_REPORT",
+                            "temperature": randint(
+                                self.temperature - 2, self.temperature + 2
+                            ),
+                            "device_ip": self.host,
+                            "device_port": self.grpc_listen_port
+                        },
+                    )
+                sleep(1)
+        except Exception as e:
+            print(f"Erro ao enviar status: {e}")
 
     def listen_messages(self):
         while self.run:
@@ -48,12 +55,15 @@ class AirConditioning:
             print("Listening")
 
     def liveness_probe(self):
-        while self.run:
-            sleep(10)
-            self.producer.send(
-                "devices_messages",
-                {"device_id": self.hash_id, "message_type": "LIVENESS_PROBE"},
-            )
+        try:
+            while self.run:
+                sleep(10)
+                self.producer.send(
+                    "liveness_probe",
+                    {"device_id": self.hash_id},
+                )
+        except Exception as e:
+            print(f"Erro ao enviar status: {e}")
 
     def start(self):
         send_status_thread = Thread(target=self.send_status)
