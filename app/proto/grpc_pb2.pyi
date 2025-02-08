@@ -6,14 +6,12 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Optional as _Op
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class Message(_message.Message):
-    __slots__ = ("name", "params", "values")
+    __slots__ = ("name", "params")
     NAME_FIELD_NUMBER: _ClassVar[int]
     PARAMS_FIELD_NUMBER: _ClassVar[int]
-    VALUES_FIELD_NUMBER: _ClassVar[int]
     name: str
-    params: _containers.RepeatedScalarFieldContainer[str]
-    values: _containers.RepeatedScalarFieldContainer[int]
-    def __init__(self, name: _Optional[str] = ..., params: _Optional[_Iterable[str]] = ..., values: _Optional[_Iterable[int]] = ...) -> None: ...
+    params: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, name: _Optional[str] = ..., params: _Optional[_Iterable[int]] = ...) -> None: ...
 
 class MessageResponse(_message.Message):
     __slots__ = ("success", "message")

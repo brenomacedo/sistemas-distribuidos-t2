@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ngrpc.proto\"7\n\x07Message\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06params\x18\x02 \x03(\t\x12\x0e\n\x06values\x18\x03 \x03(\x05\"3\n\x0fMessageResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2;\n\x0cRemoteDevice\x12+\n\x0bSendMessage\x12\x08.Message\x1a\x10.MessageResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ngrpc.proto\"\'\n\x07Message\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06params\x18\x02 \x03(\x05\"3\n\x0fMessageResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2;\n\x0cRemoteDevice\x12+\n\x0bSendMessage\x12\x08.Message\x1a\x10.MessageResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,9 +32,9 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'grpc_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_MESSAGE']._serialized_start=14
-  _globals['_MESSAGE']._serialized_end=69
-  _globals['_MESSAGERESPONSE']._serialized_start=71
-  _globals['_MESSAGERESPONSE']._serialized_end=122
-  _globals['_REMOTEDEVICE']._serialized_start=124
-  _globals['_REMOTEDEVICE']._serialized_end=183
+  _globals['_MESSAGE']._serialized_end=53
+  _globals['_MESSAGERESPONSE']._serialized_start=55
+  _globals['_MESSAGERESPONSE']._serialized_end=106
+  _globals['_REMOTEDEVICE']._serialized_start=108
+  _globals['_REMOTEDEVICE']._serialized_end=167
 # @@protoc_insertion_point(module_scope)

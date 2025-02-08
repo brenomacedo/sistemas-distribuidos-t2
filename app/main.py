@@ -26,7 +26,6 @@ class ControlDeviceMessage(BaseModel):
     device_id: str
     name: str
     params: list[str] = Field(default=[])
-    values: list[int] = Field(default=[])
 
 
 devices = {}
@@ -49,7 +48,7 @@ def handle_device_message(message: DeviceMessage):
     return {"message": "ok"}
 
 
-@app.get("/devices")
+@app.get("/device")
 def get_devices():
     return devices
 
@@ -57,11 +56,19 @@ def get_devices():
 @app.post("/check_liveness_probe")
 def check_liveness_probe():
     for key, device in devices.copy().items():
-        if device["last_liveness_probe"] < (datetime.now() - timedelta(seconds=5)):
-            print(device["last_liveness_probe"])
-            print((datetime.now() - timedelta(seconds=5)))
+        if device["last_liveness_probe"] < (datetime.now() - timedelta(seconds=6)):
+            print(
+                device["last_liveness_probe"], (datetime.now() - timedelta(seconds=6))
+            )
             print(f"Dispositivo de id {key} esta inativo, removendo...")
             del devices[key]
+
+
+@app.post("/update_liveness_probe")
+def update_liveness_probe(liveness_probe: LivenessProbe):
+    if liveness_probe.device_id in devices:
+        devices[liveness_probe.device_id]["last_liveness_probe"] = datetime.now()
+    return {"message": "ok"}
 
 
 @app.post("/control_device")
@@ -74,8 +81,6 @@ def control_device(config: ControlDeviceMessage):
     channel = grpc.insecure_channel(f"{device['device_ip']}:{device['device_port']}")
     stub = grpc_pb2_grpc.RemoteDeviceStub(channel)
 
-    message = grpc_pb2.Message(
-        name=config.name, params=config.params, values=config.values
-    )
+    message = grpc_pb2.Message(name=config.name, params=config.params)
     stub.SendMessage(message)
     return {"message": "ok"}

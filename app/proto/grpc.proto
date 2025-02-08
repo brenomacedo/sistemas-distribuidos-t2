@@ -2,8 +2,7 @@ syntax = "proto3";
 
 message Message {
   string name = 1;
-  repeated string params = 2;
-  repeated int32 values = 3;
+  repeated int32 params = 2;
 }
 
 message MessageResponse {

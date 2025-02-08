@@ -101,6 +101,17 @@ class AirConditioning:
         except Exception as e:
             print(f"Erro ao enviar status: {e}")
 
+    def send_liveness_probe(self):
+        try:
+            while self.run:
+                self.producer.send(
+                    "liveness_probe",
+                    {"device_id": self.device_id},
+                )
+                sleep(4)
+        except Exception as e:
+            print(f"Erro ao enviar status: {e}")
+
     def listen_messages(self):
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         grpc_pb2_grpc.add_RemoteDeviceServicer_to_server(
@@ -119,6 +130,9 @@ class AirConditioning:
         listen_messages = Thread(target=self.listen_messages)
         listen_messages.start()
 
+        liveness_probe = Thread(target=self.send_liveness_probe)
+        liveness_probe.start()
+
         input("Pressione Enter para encerrar o dispositivo!\n")
         print("Encerrando o dispositivo")
         self.run = False
@@ -128,4 +142,19 @@ class AirConditioning:
         send_status_thread.join()
 
 
-AirConditioning().start()
+name = (
+    input("Digite o nome do dispositivo: (Ex: Ar Condicionado da Sala): ")
+    or "Ar Condicionado"
+)
+
+grpc_listen_port = 50000
+try:
+    grpc_listen_port = int(
+        input(
+            "Digite a porta que o grpc vai escutar (Geralmente um numero entre 50000 e 60000): "
+        )
+    )
+except Exception:
+    pass
+
+AirConditioning(name=name, grpc_listen_port=grpc_listen_port).start()
