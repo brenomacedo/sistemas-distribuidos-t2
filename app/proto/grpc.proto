@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+message Message {
+  string name = 1;
+  repeated string params = 2;
+  repeated int32 values = 3;
+}
+
+message MessageResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+service RemoteDevice {
+    rpc SendMessage(Message) returns (MessageResponse) {}
+}

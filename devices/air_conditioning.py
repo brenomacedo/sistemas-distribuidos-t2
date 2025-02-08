@@ -2,14 +2,62 @@ from random import randint, randbytes
 from time import sleep, time
 from kafka import KafkaProducer
 from threading import Thread
+from concurrent import futures
+import grpc
+from proto import grpc_pb2
+from proto import grpc_pb2_grpc
 import json
 
 
-class AirConditioning:
-    def __init__(self, name = "Ar Condicionado", broker_ip = "localhost", broker_port = 9092, grpc_listen_port = 9000, host = "localhost", port = 9000):
-        self.run = True
+class RemoteDeviceServicer(grpc_pb2_grpc.RemoteDeviceServicer):
+    def __init__(self, device):
+        super()
 
-        self.name = "Ar Condicionado 1"
+        self.device = device
+
+    def SendMessage(self, request, context):
+        # Lógica para o método SendMessage
+        print("Device", self.device.get_short_id(), "Recebou uma mensagem")
+        if request.name == "TURN_ON":
+            print("Ligando o ar condicionado de id " + self.device.get_short_id())
+            self.device.powered_on = True
+        elif request.name == "TURN_OFF":
+            print("Desligando o ar condicionado de id " + self.device.get_short_id())
+            self.device.powered_on = False
+        elif request.name == "INCREASE_TEMPERATURE":
+            print(
+                "Aumentando a temperatura do ar condicionado de id "
+                + self.device.get_short_id()
+            )
+            self.device.temperature += 1
+        elif request.name == "DECREASE_TEMPERATURE":
+            print(
+                "Diminuindo a temperatura do ar condicionado de id "
+                + self.device.get_short_id()
+            )
+            self.device.temperature -= 1
+
+        response = grpc_pb2.MessageResponse(
+            success=True,
+            message="Mensagem recebida com sucesso",
+        )
+
+        return response
+
+
+class AirConditioning:
+    def __init__(
+        self,
+        name="Ar Condicionado",
+        broker_ip="localhost",
+        broker_port=9092,
+        grpc_listen_port=50000,
+        host="localhost",
+    ):
+        self.run = True
+        self.server = None
+
+        self.name = name
         self.type = "AIR_CONDITIONING"
 
         self.powered_on = True
@@ -20,13 +68,16 @@ class AirConditioning:
 
         self.broker_ip = broker_ip
         self.broker_port = broker_port
- 
-        self.hash_id = f"{int(time() * 1000)}-{randbytes(20).hex()}"
+
+        self.device_id = f"{int(time() * 1000)}-{randbytes(20).hex()}"
 
         self.producer = KafkaProducer(
             bootstrap_servers=f"{self.broker_ip}:{self.broker_port}",
             value_serializer=lambda x: json.dumps(x).encode(),
         )
+
+    def get_short_id(self):
+        return self.device_id[:8]
 
     def send_status(self):
         try:
@@ -35,14 +86,15 @@ class AirConditioning:
                     self.producer.send(
                         "device_message",
                         {
-                            "device_id": self.hash_id,
+                            "device_id": self.device_id,
+                            "name": self.name,
                             "device_type": self.type,
                             "message_type": "TEMPERATURE_REPORT",
                             "temperature": randint(
                                 self.temperature - 2, self.temperature + 2
                             ),
                             "device_ip": self.host,
-                            "device_port": self.grpc_listen_port
+                            "device_port": self.grpc_listen_port,
                         },
                     )
                 sleep(1)
@@ -50,20 +102,15 @@ class AirConditioning:
             print(f"Erro ao enviar status: {e}")
 
     def listen_messages(self):
-        while self.run:
-            sleep(1)
-            print("Listening")
+        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        grpc_pb2_grpc.add_RemoteDeviceServicer_to_server(
+            RemoteDeviceServicer(self), self.server
+        )
 
-    def liveness_probe(self):
-        try:
-            while self.run:
-                sleep(10)
-                self.producer.send(
-                    "liveness_probe",
-                    {"device_id": self.hash_id},
-                )
-        except Exception as e:
-            print(f"Erro ao enviar status: {e}")
+        # Escutando na porta 50051
+        print(f"Servidor gRPC ouvindo na porta {self.grpc_listen_port}...")
+        self.server.add_insecure_port(f"[::]:{self.grpc_listen_port}")
+        self.server.start()
 
     def start(self):
         send_status_thread = Thread(target=self.send_status)
@@ -76,6 +123,7 @@ class AirConditioning:
         print("Encerrando o dispositivo")
         self.run = False
 
+        self.server.stop(0)
         listen_messages.join()
         send_status_thread.join()
 

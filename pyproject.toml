@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]>=0.115.8",
+    "grpcio-tools>=1.70.0",
     "kafka-python>=2.0.2",
     "requests>=2.32.3",
 ]
